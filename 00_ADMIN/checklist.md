@@ -2,12 +2,23 @@
 
 ## ✅ Concluído
 - [x] Criar estrutura de pastas
+- [x] Setup projeto Next.js + Tailwind
+- [x] Configurar Supabase (configuração base)
+- [x] Criar landing page
+- [x] Implementar quiz (15 perguntas)
+- [x] Campo de email obrigatório
+- [x] Configurar GitHub
 
 ## 📋 A Fazer
 
+### Sprint 1 (MVP)
+- [ ] npm install (instalar dependências)
+- [ ] Configurar variáveis de ambiente
+- [ ] Testar quiz localmente
+- [ ] Deploy Vercel (teste)
+
 ### Admin
 - [ ] Definir nome final
-- [ ] Configurar repositório Git
 
 ### Briefing & Requisitos
 - [ ] Completar briefing do projeto
@@ -21,10 +32,10 @@
 - [ ] Listar diferenciais
 
 ### Técnico
-- [ ] Definir stack tecnológica
-- [ ] Criar backlog de desenvolvimento
-- [ ] Definir modelo de dados
-- [ ] Estimar custos
+- [ ] Criar API de submission
+- [ ] Criar modelo de dados
+- [ ] Integrar email (Resend)
+- [ ] Estabelecer custos
 
 ### Design
 - [ ] Criar fluxos de usuário

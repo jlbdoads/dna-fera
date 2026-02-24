@@ -11,7 +11,7 @@
 - **Versão paga:** Criadores usam seus próprios links de afiliado
 
 ## Fase Atual
-Planejamento e estruturação
+**Sprint 1:** MVP - Quiz funcionando + captura de lead
 
 ## Métricas de Sucesso
 - Quiz funcionando
