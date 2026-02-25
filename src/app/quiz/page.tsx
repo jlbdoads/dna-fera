@@ -107,7 +107,7 @@ export default function Quiz() {
             <span className="text-4xl">📧</span>
           </div>
           <h2 className="text-2xl font-bold mb-4">Quase lá!</h2>
-          <p className="text-gray-600 mb-6">
+          <p className="text-gray-700 mb-6">
             Digite seu email para receber seu guia de estilo personalizado.
           </p>
           <input
@@ -139,7 +139,7 @@ export default function Quiz() {
       <div className="max-w-lg w-full">
         {/* Progress */}
         <div className="mb-8">
-          <div className="flex justify-between text-sm text-gray-500 mb-2">
+          <div className="flex justify-between text-sm text-gray-600 mb-2">
             <span>
               Pergunta {currentQuestion + 1} de {questions.length}
             </span>
@@ -155,7 +155,7 @@ export default function Quiz() {
 
         {/* Question */}
         <div className="bg-white rounded-2xl shadow-xl p-8">
-          <h2 className="text-xl font-semibold mb-6">{question.question}</h2>
+          <h2 className="text-xl font-semibold mb-6 text-gray-900">{question.question}</h2>
 
           {question.type === "numeric" ? (
             <input
@@ -175,9 +175,9 @@ export default function Quiz() {
                   <button
                     key={option.value}
                     onClick={() => handleAnswer(option.value)}
-                    className={`w-full px-4 py-3 text-left border rounded-lg transition-all ${
+                    className={`w-full px-4 py-3 text-left border rounded-lg transition-all text-gray-900 ${
                       selected
-                        ? "border-primary-500 bg-primary-50 text-primary-700"
+                        ? "border-primary-500 bg-primary-50 text-gray-900"
                         : "border-gray-300 hover:border-gray-400"
                     }`}
                   >
@@ -218,9 +218,9 @@ export default function Quiz() {
                   <button
                     key={option.value}
                     onClick={() => handleAnswer(option.value)}
-                    className={`w-full px-4 py-3 text-left border rounded-lg transition-all ${
+                    className={`w-full px-4 py-3 text-left border rounded-lg transition-all text-gray-900 ${
                       selected
-                        ? "border-primary-500 bg-primary-50 text-primary-700"
+                        ? "border-primary-500 bg-primary-50 text-gray-900"
                         : "border-gray-300 hover:border-gray-400"
                     }`}
                   >
@@ -236,7 +236,7 @@ export default function Quiz() {
             <button
               onClick={handleBack}
               disabled={currentQuestion === 0}
-              className="px-6 py-2 text-gray-600 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-2 text-gray-700 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               ← Voltar
             </button>
