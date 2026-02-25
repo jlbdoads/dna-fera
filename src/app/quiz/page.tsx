@@ -115,7 +115,7 @@ export default function Quiz() {
             placeholder="seu@email.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-primary-500 text-gray-900 placeholder-gray-400"
           />
           <button
             onClick={handleSubmit}
@@ -163,7 +163,7 @@ export default function Quiz() {
               placeholder={question.placeholder}
               value={(answers[question.id.toString()] as string) || ""}
               onChange={(e) => handleAnswer(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-gray-900 placeholder-gray-400"
             />
           ) : question.type === "multiple" ? (
             <div className="space-y-3">
