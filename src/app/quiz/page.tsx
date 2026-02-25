@@ -1,13 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { questions, type Question } from "@/lib/questions";
+import { questions } from "@/lib/questions";
+import { supabase } from "@/lib/supabase";
 
 export default function Quiz() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [email, setEmail] = useState("");
   const [isFinished, setIsFinished] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
 
   const question = questions[currentQuestion];
   const progress = ((currentQuestion + 1) / questions.length) * 100;
@@ -39,11 +42,53 @@ export default function Quiz() {
   };
 
   const handleSubmit = async () => {
-    // TODO: Salvar no banco de dados
-    // TODO: Enviar email com resultado
-    console.log("Answers:", answers);
-    console.log("Email:", email);
-    alert("Quiz concluído! Em breve você receberá seu resultado por email.");
+    if (!email) return;
+
+    setIsLoading(true);
+
+    try {
+      // 1. Criar ou encontrar usuário
+      let userId: string | null = null;
+
+      // Tenta encontrar usuário existente
+      const { data: existingUser } = await supabase
+        .from("users")
+        .select("id")
+        .eq("email", email)
+        .single();
+
+      if (existingUser) {
+        userId = existingUser.id;
+      } else {
+        // Cria novo usuário
+        const { data: newUser, error: userError } = await supabase
+          .from("users")
+          .insert({ email })
+          .select("id")
+          .single();
+
+        if (userError) throw userError;
+        userId = newUser?.id;
+      }
+
+      // 2. Salvar respostas do quiz
+      const { error: quizError } = await supabase
+        .from("quiz_responses")
+        .insert({
+          user_id: userId,
+          answers: answers,
+        });
+
+      if (quizError) throw quizError;
+
+      setIsSaved(true);
+      alert("Quiz concluído! Em breve você receberá seu resultado por email.");
+    } catch (error) {
+      console.error("Erro ao salvar:", error);
+      alert("Erro ao salvar. Tente novamente.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const isAnswered = () => {
@@ -74,11 +119,16 @@ export default function Quiz() {
           />
           <button
             onClick={handleSubmit}
-            disabled={!email}
+            disabled={!email || isLoading}
             className="w-full px-6 py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Receber Meu Resultado
+            {isLoading ? "Salvando..." : "Receber Meu Resultado"}
           </button>
+          {isSaved && (
+            <p className="mt-4 text-green-600 text-sm">
+              ✅ Salvo com sucesso! Verifique seu email em breve.
+            </p>
+          )}
         </div>
       </div>
     );
