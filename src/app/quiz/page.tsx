@@ -81,6 +81,17 @@ export default function Quiz() {
 
       if (quizError) throw quizError;
 
+      // 3. Enviar email com resultado
+      try {
+        await fetch("/api/send-result", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, answers }),
+        });
+      } catch (emailError) {
+        console.error("Erro ao enviar email:", emailError);
+      }
+
       setIsSaved(true);
       alert("Quiz concluído! Em breve você receberá seu resultado por email.");
     } catch (error) {
