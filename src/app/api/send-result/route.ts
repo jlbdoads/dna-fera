@@ -5,7 +5,9 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: Request) {
   try {
-    const { email, answers } = await request.json();
+    const { email, name, answers } = await request.json();
+
+    const userName = name || "Novo";
 
     if (!email) {
       return NextResponse.json(
@@ -44,7 +46,7 @@ export async function POST(request: Request) {
               <p style="margin: 10px 0 0 0;">Seu guia de estilo personalizado</p>
             </div>
             <div class="content">
-              <h2>Olá! 👋</h2>
+              <h2>Olá, ${userName}! 👋</h2>
               <p>Seu resultado do quiz está pronto!</p>
               
               <div class="result-box">

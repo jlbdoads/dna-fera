@@ -4,16 +4,36 @@ import { useState } from "react";
 import { questions } from "@/lib/questions";
 import { supabase } from "@/lib/supabase";
 
+type UserData = {
+  name: string;
+  phone: string;
+  email: string;
+};
+
 export default function Quiz() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
-  const [email, setEmail] = useState("");
-  const [isFinished, setIsFinished] = useState(false);
+  const [userData, setUserData] = useState<UserData>({
+    name: "",
+    phone: "",
+    email: "",
+  });
+  const [step, setStep] = useState<"form" | "quiz" | "finished">("form");
   const [isLoading, setIsLoading] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
 
   const question = questions[currentQuestion];
   const progress = ((currentQuestion + 1) / questions.length) * 100;
+
+  const handleUserDataChange = (field: keyof UserData, value: string) => {
+    setUserData({ ...userData, [field]: value });
+  };
+
+  const startQuiz = () => {
+    if (userData.name && userData.email) {
+      setStep("quiz");
+    }
+  };
 
   const handleAnswer = (value: string) => {
     if (question.type === "multiple") {
@@ -31,7 +51,7 @@ export default function Quiz() {
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
     } else {
-      setIsFinished(true);
+      setStep("finished");
     }
   };
 
@@ -42,7 +62,7 @@ export default function Quiz() {
   };
 
   const handleSubmit = async () => {
-    if (!email) return;
+    if (!userData.email) return;
 
     setIsLoading(true);
 
@@ -50,20 +70,21 @@ export default function Quiz() {
       // 1. Criar ou encontrar usuário
       let userId: string | null = null;
 
-      // Tenta encontrar usuário existente
       const { data: existingUser } = await supabase
         .from("users")
         .select("id")
-        .eq("email", email)
+        .eq("email", userData.email)
         .single();
 
       if (existingUser) {
         userId = existingUser.id;
       } else {
-        // Cria novo usuário
         const { data: newUser, error: userError } = await supabase
           .from("users")
-          .insert({ email })
+          .insert({ 
+            email: userData.email,
+            name: userData.name 
+          })
           .select("id")
           .single();
 
@@ -76,7 +97,7 @@ export default function Quiz() {
         .from("quiz_responses")
         .insert({
           user_id: userId,
-          answers: answers,
+          answers: { ...answers, userData },
         });
 
       if (quizError) throw quizError;
@@ -86,14 +107,17 @@ export default function Quiz() {
         await fetch("/api/send-result", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, answers }),
+          body: JSON.stringify({ 
+            email: userData.email, 
+            name: userData.name,
+            answers 
+          }),
         });
       } catch (emailError) {
         console.error("Erro ao enviar email:", emailError);
       }
 
       setIsSaved(true);
-      alert("Quiz concluído! Em breve você receberá seu resultado por email.");
     } catch (error) {
       console.error("Erro ao salvar:", error);
       alert("Erro ao salvar. Tente novamente.");
@@ -110,41 +134,116 @@ export default function Quiz() {
     return !!answer;
   };
 
-  if (isFinished) {
+  // Tela inicial - Coleta de dados
+  if (step === "form") {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
+          <div className="text-center mb-6">
+            <h1 className="text-2xl font-bold text-gray-900">DNA FERA</h1>
+            <p className="text-gray-600">Descubra seu estilo pessoal</p>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Nome completo
+              </label>
+              <input
+                type="text"
+                placeholder="Seu nome"
+                value={userData.name}
+                onChange={(e) => handleUserDataChange("name", e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                WhatsApp
+              </label>
+              <input
+                type="tel"
+                placeholder="(00) 00000-0000"
+                value={userData.phone}
+                onChange={(e) => handleUserDataChange("phone", e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                E-mail
+              </label>
+              <input
+                type="email"
+                placeholder="seu@email.com"
+                value={userData.email}
+                onChange={(e) => handleUserDataChange("email", e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white"
+              />
+            </div>
+
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+              <p className="text-xs text-yellow-800">
+                <strong>⚠️ Importante:</strong> Por ser um serviço gratuito, 
+                limitamos o resultado a <strong>1 por usuário</strong>. 
+                Não fazemos envio de mensagens, e-mails ou marketing sem seu consentimento.
+              </p>
+            </div>
+
+            <button
+              onClick={startQuiz}
+              disabled={!userData.name || !userData.email}
+              className="w-full px-6 py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Começar Quiz →
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Tela final - Email
+  if (step === "finished") {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
           <div className="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <span className="text-4xl">📧</span>
+            <span className="text-4xl">🎉</span>
           </div>
-          <h2 className="text-2xl font-bold mb-4">Quase lá!</h2>
+          <h2 className="text-2xl font-bold mb-4 text-gray-900">Quiz Concluído!</h2>
           <p className="text-gray-700 mb-6">
-            Digite seu email para receber seu guia de estilo personalizado.
+            Obrigado, {userData.name}! Seu resultado está sendo preparado.
           </p>
-          <input
-            type="email"
-            placeholder="seu@email.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-primary-500 text-gray-900 placeholder-gray-400"
-          />
-          <button
-            onClick={handleSubmit}
-            disabled={!email || isLoading}
-            className="w-full px-6 py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isLoading ? "Salvando..." : "Receber Meu Resultado"}
-          </button>
+          <p className="text-gray-600 mb-6">
+            Enviaremos o resultado para: <strong className="text-gray-900">{userData.email}</strong>
+          </p>
+          
           {isSaved && (
-            <p className="mt-4 text-green-600 text-sm">
-              ✅ Salvo com sucesso! Verifique seu email em breve.
-            </p>
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <p className="text-green-700 font-medium">
+                ✅ Verifique sua caixa de entrada (ou spam) em poucos minutos!
+              </p>
+            </div>
+          )}
+
+          {!isSaved && (
+            <button
+              onClick={handleSubmit}
+              disabled={isLoading}
+              className="w-full px-6 py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? "Enviando..." : "Receber Meu Resultado"}
+            </button>
           )}
         </div>
       </div>
     );
   }
 
+  // Tela do Quiz
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center p-4">
       <div className="max-w-lg w-full">
@@ -174,7 +273,7 @@ export default function Quiz() {
               placeholder={question.placeholder}
               value={(answers[question.id.toString()] as string) || ""}
               onChange={(e) => handleAnswer(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-gray-900 placeholder-gray-400"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white"
             />
           ) : question.type === "multiple" ? (
             <div className="space-y-3">
@@ -186,10 +285,10 @@ export default function Quiz() {
                   <button
                     key={option.value}
                     onClick={() => handleAnswer(option.value)}
-                    className={`w-full px-4 py-3 text-left border rounded-lg transition-all text-gray-900 ${
+                    className={`w-full px-4 py-3 text-left border rounded-lg transition-all ${
                       selected
                         ? "border-primary-500 bg-primary-50 text-gray-900"
-                        : "border-gray-300 hover:border-gray-400"
+                        : "border-gray-300 bg-gray-50 hover:border-gray-400 text-gray-900"
                     }`}
                   >
                     <span className="flex items-center">
@@ -229,10 +328,10 @@ export default function Quiz() {
                   <button
                     key={option.value}
                     onClick={() => handleAnswer(option.value)}
-                    className={`w-full px-4 py-3 text-left border rounded-lg transition-all text-gray-900 ${
+                    className={`w-full px-4 py-3 text-left border rounded-lg transition-all ${
                       selected
                         ? "border-primary-500 bg-primary-50 text-gray-900"
-                        : "border-gray-300 hover:border-gray-400"
+                        : "border-gray-300 bg-gray-50 hover:border-gray-400 text-gray-900"
                     }`}
                   >
                     {option.label}
